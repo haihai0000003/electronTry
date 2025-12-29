@@ -1,13 +1,12 @@
-import { BrowserWindow, ipcMain, screen, app, dialog } from "electron";
-import { createRequire } from "node:module";
+import { BrowserWindow, ipcMain, screen, Tray, Menu, app, dialog } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import * as os from "os";
 import { Worker } from "worker_threads";
-const __dirname$2 = path.dirname(fileURLToPath(import.meta.url));
+const __dirname$3 = path.dirname(fileURLToPath(import.meta.url));
 let trayWindow = null;
 function createTrayWindow() {
-  console.log(path.join(__dirname$2, "preload.ts"));
+  console.log(path.join(__dirname$3, "preload.ts"));
   trayWindow = new BrowserWindow({
     width: 100,
     height: 100,
@@ -31,7 +30,7 @@ function createTrayWindow() {
       // 不允许在渲染进程直接使用Node.js（安全考虑）
       contextIsolation: true,
       // 开启上下文隔离（安全特性，隔离主进程和渲染进程）
-      preload: path.join(__dirname$2, "preload.mjs")
+      preload: path.join(__dirname$3, "preload.mjs")
       // 预加载脚本的路径，用来安全地暴露API给渲染进程
     }
   });
@@ -94,7 +93,33 @@ function getMemoryUsage() {
   const usedMem = totalMem - freeMem;
   return Math.round(usedMem / totalMem * 100);
 }
-createRequire(import.meta.url);
+const __dirname$2 = path.dirname(fileURLToPath(import.meta.url));
+let tray = null;
+function createminiTray(mainWindow) {
+  console.log("run");
+  const trayIcon = path.join(__dirname$2, "../public/zt41i-8xkjx-001.ico");
+  tray = new Tray(trayIcon);
+  tray.setToolTip("Note Box");
+  const trayMenu = Menu.buildFromTemplate([
+    {
+      label: "显示窗口",
+      click: () => {
+        mainWindow == null ? void 0 : mainWindow.show();
+        mainWindow == null ? void 0 : mainWindow.focus();
+        mainWindow == null ? void 0 : mainWindow.restore();
+      }
+    },
+    {
+      label: "退出应用",
+      click: () => {
+        tray == null ? void 0 : tray.destroy();
+        mainWindow == null ? void 0 : mainWindow.close();
+        app.quit();
+      }
+    }
+  ]);
+  tray.setContextMenu(trayMenu);
+}
 const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname$1, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
@@ -106,7 +131,8 @@ function createWindow() {
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
     webPreferences: {
-      preload: path.join(__dirname$1, "preload.mjs")
+      preload: path.join(__dirname$1, "preload.mjs"),
+      devTools: true
     }
   });
   win.webContents.on("did-finish-load", () => {
@@ -117,6 +143,11 @@ function createWindow() {
   } else {
     win.loadFile(path.join(RENDERER_DIST, "index.html"));
   }
+  win.on("closed", (e) => {
+    e.preventDefault();
+    win == null ? void 0 : win.hide();
+    return false;
+  });
 }
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
@@ -129,6 +160,7 @@ app.on("activate", () => {
     createWindow();
   }
 });
+let c = 0.64;
 async function handleFileOpen(event) {
   const { canceled, filePaths } = await dialog.showOpenDialog({
     properties: ["openDirectory"]
@@ -142,8 +174,11 @@ async function handleFileOpen(event) {
       });
       worker.on("message", (msg) => {
         if (msg.type === "complete") {
+          c = 1;
+          win == null ? void 0 : win.setProgressBar(c);
           resolve(msg.files);
         } else if (msg.type === "progress") {
+          win == null ? void 0 : win.setProgressBar(c);
           event.sender.send("scan-progress", msg.path);
         }
       });
@@ -158,6 +193,7 @@ app.whenReady().then(() => {
   ipcMain.handle("dialog:openFile", handleFileOpen);
   createWindow();
   createTrayWindow();
+  createminiTray(win);
 });
 export {
   MAIN_DIST,

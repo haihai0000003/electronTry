@@ -1,12 +1,9 @@
 import { app, BrowserWindow, ipcMain, dialog, IpcMainInvokeEvent, Notification } from 'electron'
-import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
-import fs from 'node:fs/promises'
 import {createTrayWindow} from './trayManager'
 import {Worker} from 'worker_threads'
-
-const require = createRequire(import.meta.url)
+import { createminiTray } from './miniTray'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // The built directory structure
 //
@@ -18,7 +15,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // │ │ └── preload.mjs
 // │
 process.env.APP_ROOT = path.join(__dirname, '..')
-
 // 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
 export const VITE_DEV_SERVER_URL = process.env['VITE_DEV_SERVER_URL']
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
@@ -43,31 +39,32 @@ function createWindow() {
 
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
-    win.webContents.on('did-finish-load', () => {
-      if(win?.webContents.isDevToolsOpened()) {
-        win.webContents.openDevTools({mode: 'detach'})
-      }
-    })
+    // win.webContents.on('did-finish-load', () => {
+    //   if(win?.webContents.isDevToolsOpened()) {
+    //     win.webContents.openDevTools({mode: 'detach'})
+    //   }
+    // })
 
-    win.webContents.on('did-frame-finish-load', () => {
-      console.log('run')
-      if (!win?.webContents.isDevToolsOpened()) {
-        win?.webContents.openDevTools({ mode: 'detach' });
-      }
-    });
+    // win.webContents.on('did-frame-finish-load', () => {
+    //   if (!win?.webContents.isDevToolsOpened()) {
+    //     win?.webContents.openDevTools({ mode: 'detach' });
+    //   }
+    // });
   } else {
-    // win.loadFile('dist/index.html')
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
 
-
+  win.on('closed', (e: Event) => {
+    e.preventDefault(); // 阻止默认的窗口关闭（应用退出）行为
+    win?.hide(); // 隐藏主窗口
+    return false; // 取消关闭操作
+  })
 }
 
 const NOTIFICATION_TITLE = 'Basic Notification'
 const NOTIFICATION_BODY = 'Notification from the Main process'
 
 function showNotification () {
-  console.log("show")
   new Notification({ title: NOTIFICATION_TITLE, body: NOTIFICATION_BODY }).show()
 }
 
@@ -129,4 +126,5 @@ app.whenReady().then(() => {
   ipcMain.handle('dialog:openFile', handleFileOpen)
   createWindow()
   createTrayWindow()
+  createminiTray(win)
 })
