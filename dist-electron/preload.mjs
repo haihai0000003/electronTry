@@ -37,7 +37,7 @@ electron.contextBridge.exposeInMainWorld("electronAPI", {
       callback(memUsage);
     });
   },
-  openFile: () => electron.ipcRenderer.invoke("dialog:openFile"),
+  openFile: (options) => electron.ipcRenderer.invoke("dialog:openFile", options),
   scanProgress: (callback) => {
     electron.ipcRenderer.on("scan-progress", (event, path) => {
       callback(path);

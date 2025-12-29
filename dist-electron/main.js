@@ -1,12 +1,12 @@
-import { BrowserWindow, ipcMain, screen, Tray, Menu, app, dialog } from "electron";
+import { BrowserWindow, ipcMain, screen, Tray, Menu, app, MenuItem, dialog } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import * as os from "os";
 import { Worker } from "worker_threads";
-const __dirname$3 = path.dirname(fileURLToPath(import.meta.url));
+const __dirname$4 = path.dirname(fileURLToPath(import.meta.url));
 let trayWindow = null;
 function createTrayWindow() {
-  console.log(path.join(__dirname$3, "preload.ts"));
+  console.log(path.join(__dirname$4, "preload.ts"));
   trayWindow = new BrowserWindow({
     width: 100,
     height: 100,
@@ -30,7 +30,7 @@ function createTrayWindow() {
       // 不允许在渲染进程直接使用Node.js（安全考虑）
       contextIsolation: true,
       // 开启上下文隔离（安全特性，隔离主进程和渲染进程）
-      preload: path.join(__dirname$3, "preload.mjs")
+      preload: path.join(__dirname$4, "preload.mjs")
       // 预加载脚本的路径，用来安全地暴露API给渲染进程
     }
   });
@@ -93,11 +93,11 @@ function getMemoryUsage() {
   const usedMem = totalMem - freeMem;
   return Math.round(usedMem / totalMem * 100);
 }
-const __dirname$2 = path.dirname(fileURLToPath(import.meta.url));
+const __dirname$3 = path.dirname(fileURLToPath(import.meta.url));
 let tray = null;
 function createminiTray(mainWindow) {
   console.log("run");
-  const trayIcon = path.join(__dirname$2, "../public/zt41i-8xkjx-001.ico");
+  const trayIcon = path.join(__dirname$3, "../public/zt41i-8xkjx-001.ico");
   tray = new Tray(trayIcon);
   tray.setToolTip("Note Box");
   const trayMenu = Menu.buildFromTemplate([
@@ -120,6 +120,49 @@ function createminiTray(mainWindow) {
   ]);
   tray.setContextMenu(trayMenu);
 }
+path.dirname(fileURLToPath(import.meta.url));
+const buildContextMenu = (mainWindow) => {
+  const contextMenu = new Menu();
+  contextMenu.append(new MenuItem({
+    label: "复制",
+    role: "copy",
+    accelerator: "CmdOrCtrl+C",
+    enabled: true
+  }));
+  contextMenu.append(
+    new MenuItem({
+      label: "粘贴",
+      role: "paste",
+      accelerator: "CmdOrCtrl+V",
+      enabled: true
+    })
+  );
+  contextMenu.append(new MenuItem({ type: "separator" }));
+  contextMenu.append(
+    new MenuItem({
+      label: "刷新页面",
+      click: () => {
+        if (mainWindow) {
+          mainWindow.webContents.reload();
+        }
+      },
+      visible: true
+      // 是否可见
+    })
+  );
+  contextMenu.append(
+    new MenuItem({
+      label: "开发者工具",
+      click: () => {
+        if (mainWindow) {
+          mainWindow.webContents.openDevTools({ mode: "detach" });
+        }
+      },
+      accelerator: "F12"
+    })
+  );
+  return contextMenu;
+};
 const __dirname$1 = path.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path.join(__dirname$1, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
@@ -148,6 +191,16 @@ function createWindow() {
     win == null ? void 0 : win.hide();
     return false;
   });
+  win.webContents.on("context-menu", (event, params) => {
+    event.preventDefault();
+    const customMenu = buildContextMenu(win);
+    console.log("customMenu");
+    customMenu.popup({
+      window: win,
+      x: params.x,
+      y: params.y
+    });
+  });
 }
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
@@ -161,10 +214,8 @@ app.on("activate", () => {
   }
 });
 let c = 0.64;
-async function handleFileOpen(event) {
-  const { canceled, filePaths } = await dialog.showOpenDialog({
-    properties: ["openDirectory"]
-  });
+async function handleFileOpen(event, options) {
+  const { canceled, filePaths } = await dialog.showOpenDialog(options ?? {});
   if (!canceled) {
     const filePath = filePaths[0];
     return new Promise((resolve) => {

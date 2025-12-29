@@ -6,7 +6,7 @@ defineProps<{ msg: string }>()
 const count = ref(0)
 const scaningFile = ref('')
 const handleClick = async () => {
-  const filePath = await window.electronAPI.openFile()
+  const filePath = await window.electronAPI.openFile({properties: ['openDirectory']})
   console.log(filePath)
 }
 
@@ -19,31 +19,21 @@ const NOTIFICATION_BODY = 'Notification from the Renderer process. Click to log 
 const CLICK_MESSAGE = 'Notification clicked!'
 
 new window.Notification(NOTIFICATION_TITLE, { body: NOTIFICATION_BODY })
+
+const selectPhoto = () => {
+  
+}
 </script>
 
 <template>
-  <h1>{{ msg }}</h1>
-  <span>正在扫描的文件：{{scaningFile}}</span>
   <div class="card">
-    <button type="button" @click="handleClick" class="h-[100px]">count is {{ count }}</button>
-    <p>
-      Edit
-      <code>components/HelloWorld.vue</code> to test HMR
-    </p>
+    <button type="button" @click="handleClick" class="px-[10px] py-[5px] border">扫描</button>
+    <p>正在扫描的文件：{{scaningFile}}</p>
   </div>
 
-  <p>
-    Check out
-    <a href="https://vuejs.org/guide/quick-start.html#local" target="_blank"
-      >create-vue</a
-    >, the official Vue + Vite starter
-  </p>
-  <p>
-    Install
-    <a href="https://github.com/vuejs/language-tools" target="_blank">Volar</a>
-    in your IDE for a better DX
-  </p>
-  <p class="read-the-docs">Click on the Vite and Vue logos to learn more</p>
+  <div>
+    <button class="px-[10px] py-[5px] border" @click="selectPhoto">选择图片</button>
+  </div>
 </template>
 
 <style scoped>

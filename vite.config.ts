@@ -17,8 +17,9 @@ export default defineConfig({
             outDir: 'dist-electron',
             rollupOptions: {
               input: {
+                main: 'electron/main.ts',
                 worker: 'electron/fileWork.js',
-              }
+              } 
             }
           }
         }

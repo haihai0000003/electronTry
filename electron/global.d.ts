@@ -1,6 +1,7 @@
 // === TypeScript类型声明 ===
 // 这部分告诉TypeScript，window对象上有一个electronAPI属性
 // 这样在Vue组件中使用window.electronAPI时，TypeScript不会报错
+import { OpenDialogOptions } from 'electron'
 
 // 添加到 global.d.ts 或单独的类型文件
 declare global {
@@ -10,7 +11,7 @@ declare global {
         onMouseMove: (screenX: number, screenY: number) => void;  // 鼠标移动方法
         onMouseUp: () => void;                            // 鼠标松开方法
         onSystemInfo: (callback: (memUsage: number) => void) => void;  // 接收系统信息方法
-        openFile: () => string;
+        openFile: (options?: OpenDialogOptions) => string;
         getPosition: () => number[];
         scanProgress: (callback: (path: string) => void) => void;
       };

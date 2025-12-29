@@ -4,7 +4,7 @@
 
 // contextBridge: Electron提供的桥接模块，用于安全地暴露API给渲染进程
 // ipcRenderer: 渲染进程的通信模块，用于向主进程发送消息和接收消息
-import { ipcRenderer, contextBridge } from 'electron'
+import { ipcRenderer, contextBridge, OpenDialogOptions } from 'electron'
 // contextBridge.exposeInMainWorld(): 安全地向渲染进程暴露API
 // 第一个参数 'electronAPI'(想叫什么叫什么): 在渲染进程中访问的对象名称（window.electronAPI）
 // 第二个参数：要暴露的API对象
@@ -58,7 +58,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     });
   },
 
-  openFile: () => ipcRenderer.invoke('dialog:openFile'),
+  openFile: (options?: OpenDialogOptions) => ipcRenderer.invoke('dialog:openFile', options),
+
   scanProgress: (callback: (path: string) => void) => {
     ipcRenderer.on('scan-progress', (event, path) => {
       callback(path)

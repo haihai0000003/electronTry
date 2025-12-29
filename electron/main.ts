@@ -1,9 +1,10 @@
-import { app, BrowserWindow, ipcMain, dialog, IpcMainInvokeEvent, Notification } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, IpcMainInvokeEvent, Notification, OpenDialogOptions, ContextMenuParams, ContextMenuEvent } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import {createTrayWindow} from './trayManager'
 import {Worker} from 'worker_threads'
 import { createminiTray } from './miniTray'
+import {buildContextMenu} from './utils'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // The built directory structure
 //
@@ -59,6 +60,17 @@ function createWindow() {
     win?.hide(); // 隐藏主窗口
     return false; // 取消关闭操作
   })
+
+  win.webContents.on('context-menu', (event, params: ContextMenuParams) => {
+    event.preventDefault();
+    const customMenu = buildContextMenu(win!);
+    console.log('customMenu')
+    customMenu.popup({
+      window: win!,
+      x: params.x,
+      y: params.y
+    });
+  })
 }
 
 const NOTIFICATION_TITLE = 'Basic Notification'
@@ -87,10 +99,8 @@ app.on('activate', () => {
 })
 
 let c = 0.64
-async function handleFileOpen (event: IpcMainInvokeEvent) {
-  const { canceled, filePaths } = await dialog.showOpenDialog({
-    properties: ['openDirectory']
-  })
+async function handleFileOpen (event: IpcMainInvokeEvent, options?: OpenDialogOptions) {
+  const { canceled, filePaths } = await dialog.showOpenDialog(options?? {})
   if (!canceled) {
     const filePath = filePaths[0] 
     return new Promise((resolve) => {
@@ -118,7 +128,6 @@ async function handleFileOpen (event: IpcMainInvokeEvent) {
     })
   }
 }
-
 
 
 
