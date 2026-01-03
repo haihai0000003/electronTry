@@ -9,8 +9,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@langchain/community": "^1.1.1",
+    "@langchain/core": "^1.1.8",
+    "@langchain/langgraph": "^1.0.7",
+    "@langchain/openai": "^1.2.0",
+    "dotenv": "^17.2.3",
     "vue": "^3.4.21",
-    "vue-router": "^4.6.4"
+    "vue-router": "^4.6.4",
+    "zod": "^4.3.4"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
